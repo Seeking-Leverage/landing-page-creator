@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="28" viewBox="0 0 140 28" role="img" aria-label="Northline">
+  <rect width="28" height="28" rx="6" fill="#B8F26D"/>
+  <path d="M8 20V8l12 12V8" fill="none" stroke="#10210A" stroke-width="2.2"/>
+  <text x="38" y="20" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700" fill="#F4F7F2">Northline</text>
+</svg>

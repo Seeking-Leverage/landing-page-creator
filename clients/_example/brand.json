@@ -1,0 +1,16 @@
+{
+  "name": "Northline",
+  "tagline": "Example brand — replace this spec",
+  "colors": {
+    "bg": "#0B0F0C",
+    "fg": "#F4F7F2",
+    "accent": "#B8F26D",
+    "accentFg": "#10210A",
+    "muted": "#9AA896"
+  },
+  "logo": {
+    "file": "logo.svg",
+    "alt": "Northline"
+  },
+  "privacyUrl": "https://example.com/privacy"
+}

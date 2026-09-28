@@ -1,0 +1,41 @@
+{
+  "icp": "For paid-growth teams who waste budget on homepages",
+  "headline": "Send paid traffic to a page that is built to convert.",
+  "subhead": "This is the example campaign. Swap the spec, keep the harness. Fast on mobile, one action, UTMs intact.",
+  "offer": [
+    "One page, one action — no nav leak",
+    "Brand tokens from a JSON file, not a 40-page PDF",
+    "Pixels stay off until you set IDs in .env",
+    "Clone, run locally, deploy dist/"
+  ],
+  "proof": [
+    {
+      "quote": "Replace this with a real result from a campaign that used this page.",
+      "who": "Example customer"
+    }
+  ],
+  "faq": [
+    {
+      "q": "Is this the live client page?",
+      "a": "No. This is the public example spec. Copy clients/_example to a new folder and point CLIENT at it."
+    },
+    {
+      "q": "Where do leads go?",
+      "a": "To FORM_ENDPOINT in your .env. If that is empty, the form will not submit. Do not use someone else's webhook."
+    }
+  ],
+  "hero": {
+    "file": "hero.svg",
+    "alt": "Simple product frame"
+  },
+  "primaryAction": {
+    "type": "form",
+    "label": "Get the walkthrough",
+    "fields": [
+      { "name": "name", "label": "Name", "type": "text", "required": true },
+      { "name": "email", "label": "Work email", "type": "email", "required": true },
+      { "name": "company", "label": "Company", "type": "text", "required": false }
+    ]
+  },
+  "legal": "Example page. Not an offer. Do not submit real personal data here."
+}

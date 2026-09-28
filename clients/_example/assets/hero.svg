@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Hero">
+  <rect width="1200" height="800" fill="#121816"/>
+  <rect x="80" y="80" width="1040" height="640" rx="24" fill="#1A221C" stroke="#2A382C"/>
+  <rect x="120" y="140" width="420" height="28" rx="8" fill="#B8F26D"/>
+  <rect x="120" y="190" width="640" height="18" rx="6" fill="#2E3C30"/>
+  <rect x="120" y="220" width="520" height="18" rx="6" fill="#2E3C30"/>
+  <rect x="120" y="280" width="220" height="48" rx="12" fill="#B8F26D"/>
+  <rect x="640" y="160" width="420" height="480" rx="16" fill="#0B0F0C" stroke="#2A382C"/>
+  <rect x="680" y="200" width="340" height="16" rx="4" fill="#2E3C30"/>
+  <rect x="680" y="232" width="280" height="16" rx="4" fill="#2E3C30"/>
+  <rect x="680" y="320" width="340" height="40" rx="8" fill="#1A221C" stroke="#2A382C"/>
+  <rect x="680" y="380" width="340" height="40" rx="8" fill="#1A221C" stroke="#2A382C"/>
+  <rect x="680" y="460" width="340" height="48" rx="10" fill="#B8F26D"/>
+</svg>
