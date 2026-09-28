@@ -61,7 +61,7 @@ function hero(brand) {
 
 function campaign(brand, pageUrl) {
   return {
-    icp: "Draft \u2014 replace with who this ad is for",
+    icp: "Draft — replace with who this ad is for",
     headline: brand.name + ": one page for paid traffic.",
     subhead: "Colors and logo were drafted from " + pageUrl + ". Rewrite the offer before you spend.",
     offer: [
@@ -73,7 +73,7 @@ function campaign(brand, pageUrl) {
     faq: [
       {
         q: "Is this the finished page?",
-        a: "No. It is a draft spec so you can see the brand on the harness. Edit campaign.json before launch.",
+        a: "No. It is a draft spec so you can see the brand. Edit campaign.json before launch.",
       },
     ],
     hero: { file: "hero.svg", alt: brand.name + " draft" },

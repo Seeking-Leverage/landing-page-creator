@@ -1,8 +1,8 @@
 {
-  "name": "landing-page-harness",
+  "name": "landing-page-creator",
   "version": "0.1.0",
   "private": true,
-  "description": "Clone-and-run landing page harness for paid channels. No production npm dependencies.",
+  "description": "Create a fast landing page for paid traffic from a brand and campaign spec. Static files, no production dependencies, contrast checked in Chrome.",
   "license": "MIT",
   "engines": {
     "node": ">=18"

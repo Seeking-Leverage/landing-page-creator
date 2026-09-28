@@ -1,117 +1,46 @@
-# Landing page harness
+# Landing Page Creator
 
-Public kit for paid-channel landing pages.
+Clone this, point it at a brand, and get a static landing page you can host. It is for paid traffic: one offer, one action, fast on a phone and inside Instagram or Facebook.
 
-- **Harness** (this repo): speed, layout, devices, UTMs, pixel hooks, safe rendering.
-- **Spec** (`clients/<name>/`): brand, copy, action, assets.
+The shared code is the same for every company. What changes is a folder: colors, logo, headline, and the button. Secrets stay in `.env` on your machine.
 
-No production npm dependencies. Clone, copy `.env.example` → `.env`, run locally.
+No production npm dependencies. Node 18 or newer.
 
-## Can you use it immediately?
+![How a spec becomes a hosted page](docs/images/how-it-fits.svg)
 
-**Demo: yes.** Clone, `cp .env.example .env`, `npm run dev`. The `_example` page runs locally with no pixels and no form backend.
+## What you get
 
-**Paid traffic: not until you add a spec and a host.** The harness is the runtime. A live campaign still needs:
-
-| Ready now | You add per campaign |
+| Included | You still add |
 | --- | --- |
-| Layout, escape, UTM fields, preflight, static build | `clients/<name>/brand.json` + `campaign.json` |
-| Example assets | Real logo + compressed hero |
-| Form UI + honeypot | `FORM_ENDPOINT` you control (CORS + rate limit) |
-| Pixel hooks (off when blank) | IDs in **your** `.env` only |
-| `dist/` + security headers | HTTPS host (Cloudflare Pages, etc.) |
+| A single-column page that widens on desktop | The words that match the ad |
+| Logo and hero slots, size-capped | The real logo and a compressed hero |
+| UTM, `fbclid`, `gclid`, and `ttclid` captured on the form | A form endpoint you control |
+| Meta, Google Ads, and TikTok hooks, off until you set IDs | Those IDs, in `.env` only |
+| Contrast check, then a real Chrome window that clicks the button | A look at the page on a phone before you spend |
+| `dist/` plus security headers | An HTTPS host |
 
-Do not point ads at the example page. Do not commit real client folders or `.env`.
+Do not send ads to the example page. Do not commit a real client folder or `.env`.
 
-## Architecture
-
-Shared runtime on the left. Per-company spec on the right. Secrets never enter git.
-
-```mermaid
-flowchart LR
-  subgraph paid["Paid channel"]
-    Ad["Ad click\nUTMs + fbclid/gclid"]
-  end
-
-  subgraph spec["Per company \u2014 not in public git"]
-    Brand["brand.json\ncolors, logo, name"]
-    Campaign["campaign.json\nheadline, offer, action"]
-    Assets["assets/\nlogo.svg, hero.webp"]
-    Env[".env\nCLIENT, FORM_ENDPOINT, pixels"]
-  end
-
-  subgraph harness["This repo \u2014 shared"]
-    Pre["scripts/preflight.js\nsize, hex, https URLs"]
-    Rend["harness/render.js\nescape all copy"]
-    Dist["dist/\nindex.html, css, js, assets"]
-  end
-
-  subgraph live["Your host"]
-    Page["HTTPS landing page"]
-    Form["Your form endpoint"]
-    Pix["Pixels \u2014 only if IDs set"]
-  end
-
-  Ad --> Page
-  Brand --> Pre
-  Campaign --> Pre
-  Assets --> Pre
-  Env --> Rend
-  Pre --> Rend --> Dist --> Page
-  Page -->|"POST JSON + UTMs"| Form
-  Page -.->|"optional"| Pix
-```
-
-Build path:
-
-```mermaid
-flowchart TD
-  A["npm run preflight"] --> B{"Spec + assets valid?"}
-  B -->|no| X["Fail \u2014 do not ship"]
-  B -->|yes| C["npm run build"]
-  C --> D["dist/ static files"]
-  D --> E["Deploy dist/ only"]
-  E --> F["Ad URL = https page"]
-```
-
-## Quick start
+## Use it
 
 ```bash
-git clone https://github.com/Seeking-Leverage/landing-page-harness.git
-cd landing-page-harness
+git clone https://github.com/Seeking-Leverage/landing-page-creator.git
+cd landing-page-creator
 cp .env.example .env
-# Node 18+
 npm run dev
 ```
 
 Open http://127.0.0.1:4173
 
-## Pull brand colors from a URL
+`npm run dev` and `npm run build` run QA first. If the button label cannot be read, or Chrome cannot click it, the page does not start. Details: [docs/QA.md](docs/QA.md).
 
-This drafts `brand.json` from a public https page. It does not copy their font files or their photos. You still write the offer.
-
-```bash
-npm run brand -- https://client-site.com --name acme
-CLIENT=acme npm run dev
-```
-
-What it writes, locally only (real client folders are gitignored):
-
-- `clients/acme/brand.json` — bg, text, accent, muted, logo
-- `clients/acme/campaign.json` — placeholder copy, not the ad
-- `clients/acme/assets/` — their logo if it is a small same-site SVG/PNG, otherwise a monogram
-
-Check the colors before you spend. A marketing homepage with no design tokens comes back as a guess.
-
-## Build static files
+If you already cloned this when it was named `landing-page-harness`, `git pull` still works. GitHub redirects the old URL. To point the remote at the new name:
 
 ```bash
-npm run build
+git remote set-url origin https://github.com/Seeking-Leverage/landing-page-creator.git
 ```
 
-Host `dist/` on Cloudflare Pages, Netlify, GitHub Pages, or any static host. Use HTTPS.
-
-## Add a client
+## Make a page for one company
 
 ```bash
 cp -r clients/_example clients/acme
@@ -119,38 +48,67 @@ cp -r clients/_example clients/acme
 
 Edit:
 
-- `clients/acme/brand.json` — colors, name, logo alt
-- `clients/acme/campaign.json` — headline, offer, CTA, form fields
-- `clients/acme/assets/` — `logo.svg`, `hero.webp` (or `.svg` / `.jpg`), optional `og.jpg`
+- `clients/acme/brand.json` — name and the five colors. `accentFg` is the button label. It must contrast with `accent`.
+- `clients/acme/campaign.json` — headline, offer, and the one action.
+- `clients/acme/assets/logo.svg` — the logo. PNG or WebP is fine. Keep it under 40 KB.
+- `clients/acme/assets/` — the hero named in `campaign.json`. Under 200 KB.
 
-Set in `.env`:
+In `.env`:
 
 ```
 CLIENT=acme
 FORM_ENDPOINT=https://your-endpoint.example/lead
 ```
 
-Then `npm run preflight` and `npm run dev`. Keep `clients/acme` out of the public fork.
+Then `npm run dev`. Leave `clients/acme` out of git. Only `clients/_example` is public.
 
-## What is shared vs per company
+### Draft a brand from a public URL
 
-| Shared (harness) | Per company (spec) |
+This reads design tokens and, when it can, a small same-site logo. It does not copy fonts or photography, and it refuses private or local addresses.
+
+```bash
+npm run brand -- https://client-site.com --name acme
+CLIENT=acme npm run dev
+```
+
+Check the colors. A site with no tokens comes back as a guess. The accent often comes from `theme-color`, not the real button.
+
+## How wide the page is
+
+Phones already use the screen. Desktop width is `--max` in [harness/styles.css](harness/styles.css):
+
+| Window | Column |
 | --- | --- |
-| Performance, responsive layout | Brand tokens |
-| Device / in-app browser CSS | Copy and offer |
-| UTM + click-id capture | Primary action |
-| Escape + URL checks | Assets |
-| Pixel loaders (off until IDs set) | Pixel IDs in **your** `.env` |
+| Under 800px | 40rem |
+| 800px and up | 68rem |
+| 1200px and up | 80rem |
+
+Change those three values if a brand should be narrower. Restart dev after you edit the file.
+
+## Ship it
+
+![Spec to a live ad URL](docs/images/ship-path.svg)
+
+```bash
+npm run build
+```
+
+Host the `dist/` folder on Cloudflare Pages, Netlify, GitHub Pages, or any static host. HTTPS only. The checklist is [docs/GO-LIVE.md](docs/GO-LIVE.md).
+
+Pixels stay off until `META_PIXEL_ID`, `GOOGLE_ADS_ID`, or `TIKTOK_PIXEL_ID` is set in `.env`. A lead event fires when the form succeeds, not when the page loads.
+
+## What is shared
+
+| Shared, in this repo | Per company, on your machine |
+| --- | --- |
+| Layout, speed, escaping | Colors, logo, name |
+| Device width | Headline and offer |
+| UTM and click-id fields | The one action |
+| URL and contrast checks | Assets |
+| Pixel loaders | Pixel IDs |
+
+`harness/` is that shared runtime. You should not need to edit it for a normal page.
 
 ## Security
 
-Read [SECURITY.md](SECURITY.md). Short version:
-
-- Never commit `.env` or real client folders
-- `FORM_ENDPOINT` must be an endpoint **you** control
-- Campaign text is escaped; do not render it as HTML
-- Pixels stay off when IDs are blank
-
-## Go live
-
-See [docs/GO-LIVE.md](docs/GO-LIVE.md).
+[SECURITY.md](SECURITY.md). Short version: your form endpoint, your pixel IDs, and your client folders stay local. Campaign text is escaped. `npm run brand` only fetches public https URLs.

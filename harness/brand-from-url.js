@@ -118,7 +118,7 @@ async function fetchPublic(raw, accept) {
       redirect: "manual",
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: {
-        "User-Agent": "SeekingLeverageLandingHarness/0.1 (+https://github.com/Seeking-Leverage/landing-page-harness)",
+        "User-Agent": "SeekingLeverageLandingCreator/0.1 (+https://github.com/Seeking-Leverage/landing-page-creator)",
         Accept: accept,
       },
     });
@@ -205,7 +205,7 @@ async function pullBrand(rawUrl) {
   const picked = colorsFromCss(css);
   const theme = parseColor(meta(html, "theme-color"));
   const title = attr(html, /<title[^>]*>([^<]{1,120})<\/title>/i).trim();
-  const site = meta(html, "og:site_name").trim() || title.split(/[|\-\u2013\u2014]/)[0].trim() || page.url.hostname;
+  const site = meta(html, "og:site_name").trim() || title.split(/[|\-–—]/)[0].trim() || page.url.hostname;
   const privacy = [...html.matchAll(/href=["']([^"']*privacy[^"']*)["']/gi)]
     .map((m) => abs(page.url, m[1]))
     .find((u) => u && u.protocol === "https:");
@@ -215,7 +215,7 @@ async function pullBrand(rawUrl) {
   const accent = picked.accent || theme || (lum(bg) > 0.5 ? "#1F6B4A" : "#C8F54A");
   const muted = picked.muted || mix(fg, bg, 0.45);
   const notes = [];
-  if (picked.hits < 2) notes.push("Few design tokens on the page. Colors are a best guess \u2014 check them.");
+  if (picked.hits < 2) notes.push("Few design tokens on the page. Colors are a best guess — check them.");
   if (!picked.accent && theme) notes.push("Accent came from theme-color, not a button style.");
   if (!picked.accent && !theme) notes.push("No accent token found. A placeholder accent was used.");
 

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 160" role="img" aria-labelledby="title2 desc2">
+  <title id="title2">Path from spec to a live ad URL</title>
+  <desc id="desc2">Dev and build run QA first. QA fails closed if contrast or the click is bad. Only a passing build is deployed.</desc>
+  <rect width="960" height="160" fill="#f7f6f3"/>
+  <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#1c1917">
+    <rect x="20" y="48" width="140" height="64" rx="10" fill="#fff" stroke="#d6d3d1"/>
+    <text x="40" y="76" font-weight="700">Spec</text>
+    <text x="40" y="96" fill="#57534e">brand + campaign</text>
+
+    <rect x="196" y="48" width="150" height="64" rx="10" fill="#fff" stroke="#d6d3d1"/>
+    <text x="214" y="76" font-weight="700">npm run dev</text>
+    <text x="214" y="96" fill="#57534e">or npm run build</text>
+
+    <rect x="382" y="48" width="170" height="64" rx="10" fill="#10210a"/>
+    <text x="400" y="76" font-weight="700" fill="#e7f8c8">QA</text>
+    <text x="400" y="96" fill="#d9f99d">contrast, then click</text>
+
+    <rect x="588" y="48" width="150" height="64" rx="10" fill="#fff" stroke="#d6d3d1"/>
+    <text x="606" y="76" font-weight="700">dist/</text>
+    <text x="606" y="96" fill="#57534e">static files</text>
+
+    <rect x="774" y="48" width="166" height="64" rx="10" fill="#fff" stroke="#d6d3d1"/>
+    <text x="792" y="76" font-weight="700">Ad URL</text>
+    <text x="792" y="96" fill="#57534e">https host only</text>
+
+    <path d="M160 80 H196" stroke="#1c1917" stroke-width="2" marker-end="url(#b)"/>
+    <path d="M346 80 H382" stroke="#1c1917" stroke-width="2" marker-end="url(#b)"/>
+    <path d="M552 80 H588" stroke="#1c1917" stroke-width="2" marker-end="url(#b)"/>
+    <path d="M738 80 H774" stroke="#1c1917" stroke-width="2" marker-end="url(#b)"/>
+  </g>
+  <defs>
+    <marker id="b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0 0 L6 3 L0 6 Z" fill="#1c1917"/>
+    </marker>
+  </defs>
+</svg>
