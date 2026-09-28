@@ -11,7 +11,7 @@ Paid traffic dies on slow or broken pages. Run this before you spend.
 ## Performance
 - [ ] `npm run preflight` passes
 - [ ] Hero image is WebP/AVIF/SVG and under 200kb
-- [ ] Logo is SVG or under 20kb
+- [ ] Logo is SVG, PNG, or WebP and under 40kb
 - [ ] LCP target: under ~2s on mid-tier mobile / 4G
 - [ ] No extra fonts unless subsetted and licensed
 

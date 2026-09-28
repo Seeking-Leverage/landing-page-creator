@@ -1,5 +1,7 @@
 # Landing Page Creator
 
+**v0.2** (28 Sep 2026). [What changed](CHANGELOG.md).
+
 Clone this, point it at a brand, and get a static landing page you can host. It is for paid traffic: one offer, one action, fast on a phone and inside Instagram or Facebook.
 
 The shared code is the same for every company. What changes is a folder: colors, logo, headline, and the button. Secrets stay in `.env` on your machine.

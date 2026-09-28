@@ -1,6 +1,6 @@
 # QA
 
-`npm run dev` and `npm run build` run this first. A failing check does not start the page.
+`npm run dev` and `npm start` run this before the page opens. `npm run build` runs the file checks only. It does not open Chrome, and it rejects `http://` and localhost URLs.
 
 ## Automatic
 
