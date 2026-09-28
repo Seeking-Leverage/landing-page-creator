@@ -30,13 +30,17 @@ function fail(msg) {
 
 const linkAt = html.indexOf('rel="stylesheet"');
 const brandStyleAt = html.indexOf(":root{--bg:");
-const ctaRule = ".btn, button[type=\"submit\"]{background:var(--accent);color:var(--accent-fg)}";
 if (linkAt < 0 || brandStyleAt < 0 || brandStyleAt < linkAt) {
   fail("brand colors must be applied after styles.css or the CTA keeps the previous brand");
 }
-if (!html.includes(ctaRule)) fail("CTA color rule missing from the page");
-
 const c = brand.colors;
+const painted = `background:${c.accent};color:${c.accentFg}`;
+const paintedCount = html.split(painted).length - 1;
+if (paintedCount < 1) fail("CTA is not painted with accent fill and accentFg text");
+if ((html.match(/<button type="submit"|<a class="btn"/g) || []).length !== paintedCount) {
+  fail("a button is missing its text color, so the label can disappear into the fill");
+}
+
 for (const [name, hex] of Object.entries(c)) {
   if (!html.toLowerCase().includes(String(hex).toLowerCase())) fail("rendered page is missing " + name + " " + hex);
 }
