@@ -23,57 +23,6 @@ No production npm dependencies. Clone, copy `.env.example` → `.env`, run local
 
 Do not point ads at the example page. Do not commit real client folders or `.env`.
 
-## Architecture
-
-Shared runtime on the left. Per-company spec on the right. Secrets never enter git.
-
-```mermaid
-flowchart LR
-  subgraph paid["Paid channel"]
-    Ad["Ad click\nUTMs + fbclid/gclid"]
-  end
-
-  subgraph spec["Per company — not in public git"]
-    Brand["brand.json\ncolors, logo, name"]
-    Campaign["campaign.json\nheadline, offer, action"]
-    Assets["assets/\nlogo.svg, hero.webp"]
-    Env[".env\nCLIENT, FORM_ENDPOINT, pixels"]
-  end
-
-  subgraph harness["This repo — shared"]
-    Pre["scripts/preflight.js\nsize, hex, https URLs"]
-    Rend["harness/render.js\nescape all copy"]
-    Dist["dist/\nindex.html, css, js, assets"]
-  end
-
-  subgraph live["Your host"]
-    Page["HTTPS landing page"]
-    Form["Your form endpoint"]
-    Pix["Pixels — only if IDs set"]
-  end
-
-  Ad --> Page
-  Brand --> Pre
-  Campaign --> Pre
-  Assets --> Pre
-  Env --> Rend
-  Pre --> Rend --> Dist --> Page
-  Page -->|"POST JSON + UTMs"| Form
-  Page -.->|"optional"| Pix
-```
-
-Build path:
-
-```mermaid
-flowchart TD
-  A["npm run preflight"] --> B{"Spec + assets valid?"}
-  B -->|no| X["Fail — do not ship"]
-  B -->|yes| C["npm run build"]
-  C --> D["dist/ static files"]
-  D --> E["Deploy dist/ only"]
-  E --> F["Ad URL = https page"]
-```
-
 ## Quick start
 
 ```bash
@@ -86,54 +35,29 @@ npm run dev
 
 Open http://127.0.0.1:4173
 
-Build static files to `dist/`:
+## Pull brand colors from a URL
+
+This drafts `brand.json` from a public https page. It does not copy their font files or their photos. You still write the offer.
+
+```bash
+npm run brand -- https://client-site.com --name acme
+CLIENT=acme npm run dev
+```
+
+What it writes, locally only (real client folders are gitignored):
+
+- `clients/acme/brand.json` — bg, text, accent, muted, logo
+- `clients/acme/campaign.json` — placeholder copy, not the ad
+- `clients/acme/assets/` — their logo if it is a small same-site SVG/PNG, otherwise a monogram
+
+Check the colors before you spend. A marketing homepage with no design tokens comes back as a guess.
+
+## Build
 
 ```bash
 npm run build
 ```
 
-Host `dist/` on Cloudflare Pages, Netlify, GitHub Pages, or any static host. Use HTTPS.
+Host `dist/` on any static host. Use HTTPS.
 
-## Add a client
-
-```bash
-cp -r clients/_example clients/acme
-```
-
-Edit:
-
-- `clients/acme/brand.json` — colors, name, logo alt
-- `clients/acme/campaign.json` — headline, offer, CTA, form fields
-- `clients/acme/assets/` — `logo.svg`, `hero.webp` (or `.svg` / `.jpg`), optional `og.jpg`
-
-Set in `.env`:
-
-```
-CLIENT=acme
-FORM_ENDPOINT=https://your-endpoint.example/lead
-```
-
-Then `npm run preflight` and `npm run dev`. Keep `clients/acme` out of the public fork.
-
-## What is shared vs per company
-
-| Shared (harness) | Per company (spec) |
-| --- | --- |
-| Performance, responsive layout | Brand tokens |
-| Device / in-app browser CSS | Copy and offer |
-| UTM + click-id capture | Primary action |
-| Escape + URL checks | Assets |
-| Pixel loaders (off until IDs set) | Pixel IDs in **your** `.env` |
-
-## Security
-
-Read [SECURITY.md](SECURITY.md). Short version:
-
-- Never commit `.env` or real client folders
-- `FORM_ENDPOINT` must be an endpoint **you** control
-- Campaign text is escaped; do not render it as HTML
-- Pixels stay off when IDs are blank
-
-## Go live
-
-See [docs/GO-LIVE.md](docs/GO-LIVE.md).
+See the rest of this file on GitHub for the architecture diagram, or `docs/GO-LIVE.md` before you spend.
