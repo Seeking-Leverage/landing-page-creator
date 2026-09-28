@@ -1,0 +1,16 @@
+{
+  "name": "landing-page-harness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clone-and-run landing page harness for paid channels. No production npm dependencies.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "preflight": "node scripts/preflight.js",
+    "build": "node scripts/preflight.js && node scripts/build.js",
+    "dev": "node scripts/preflight.js && node scripts/dev.js",
+    "start": "node scripts/dev.js"
+  }
+}

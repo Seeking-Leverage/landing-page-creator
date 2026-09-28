@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+clients/*
+!clients/_example/
+!clients/_example/**
+*.log
+.DS_Store
+.idea/
+.vscode/
