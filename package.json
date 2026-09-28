@@ -9,8 +9,9 @@
   },
   "scripts": {
     "preflight": "node scripts/preflight.js",
-    "build": "node scripts/preflight.js && node scripts/build.js",
-    "dev": "node scripts/preflight.js && node scripts/dev.js",
+    "qa": "node scripts/qa.js",
+    "build": "node scripts/qa.js && node scripts/build.js",
+    "dev": "node scripts/qa.js && node scripts/dev.js",
     "start": "node scripts/dev.js",
     "brand": "node scripts/from-url.js"
   }
