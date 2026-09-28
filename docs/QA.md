@@ -14,6 +14,8 @@
 - The stylesheet does not still contain the example green (`#b8f26d`)
 - There is one action, the label is on the page, and a form still has its honeypot
 
+Then it opens the page in Chrome, reads the **computed** button colors, and clicks the CTA. Source text is not enough. If the label is the same color as the fill, this fails even when `brand.json` looks fine. Set `CHROME_PATH` if Chrome is not in the default location. No Chrome means QA fails.
+
 ## Still a person
 
 The script cannot see the ad. Before you spend, on a phone:
