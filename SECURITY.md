@@ -14,6 +14,7 @@ This repo is meant to be cloned. Treat every clone as untrusted input plus your 
 3. **Open redirect** — CTA and form action must be `https:` (or `http://localhost` in dev). `javascript:` and protocol-relative tricks are rejected in preflight.
 4. **Pixel leakage** — pixels load only when IDs are set in `.env`. Blank IDs = no third-party scripts.
 5. **Supply chain** — this kit has **zero runtime npm dependencies**. Do not add packages without pinning and reviewing them. There is no `postinstall`.
+6. **Brand pull** — `npm run brand` only fetches public `https` URLs. It refuses localhost, link-local, and private IPs, including after redirects. It will not download a logo from another host.
 
 ## If you add a sample form server
 - Bind to localhost by default

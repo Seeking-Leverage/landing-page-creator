@@ -11,6 +11,7 @@
     "preflight": "node scripts/preflight.js",
     "build": "node scripts/preflight.js && node scripts/build.js",
     "dev": "node scripts/preflight.js && node scripts/dev.js",
-    "start": "node scripts/dev.js"
+    "start": "node scripts/dev.js",
+    "brand": "node scripts/from-url.js"
   }
 }
