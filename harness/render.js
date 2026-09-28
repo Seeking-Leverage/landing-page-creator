@@ -15,6 +15,7 @@ function render(page) {
     ? `<a href="${escapeAttr(brand.privacyUrl)}" rel="noopener noreferrer">Privacy</a>`
     : "";
 
+  const btnStyle = `style="background:${escapeAttr(c.accent)};color:${escapeAttr(c.accentFg)}"`;
   const fields = list(action.fields, (f) => {
     const req = f.required ? "required" : "";
     return `<label for="${escapeAttr(f.name)}">${escapeHtml(f.label)}</label>
@@ -36,12 +37,12 @@ function render(page) {
     <input type="hidden" name="fbclid" />
     <input type="hidden" name="gclid" />
     <input type="hidden" name="ttclid" />
-    <p style="margin-top:1rem"><button type="submit">${escapeHtml(action.label)}</button></p>
+    <p style="margin-top:1rem"><button type="submit" ${btnStyle}>${escapeHtml(action.label)}</button></p>
     <p class="status" id="form-status" role="status"></p>
   </form>
   <div class="thanks" id="thanks"><p>Got it. We will follow up.</p></div>
 </section>`
-      : `<section class="wrap hero" id="action"><a class="btn" href="${escapeAttr(action.href)}" rel="noopener noreferrer">${escapeHtml(action.label)}</a></section>`;
+      : `<section class="wrap hero" id="action"><a class="btn" ${btnStyle} href="${escapeAttr(action.href)}" rel="noopener noreferrer">${escapeHtml(action.label)}</a></section>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -69,7 +70,7 @@ function render(page) {
     <section class="hero wrap">
       <h1>${escapeHtml(campaign.headline)}</h1>
       <p class="sub">${escapeHtml(campaign.subhead)}</p>
-      <p><a class="btn" href="#action">${escapeHtml(action.label)}</a></p>
+      <p><a class="btn" ${btnStyle} href="#action">${escapeHtml(action.label)}</a></p>
       <div class="hero-art">
         <img src="${assetPrefix}assets/${escapeAttr(campaign.hero.file)}" alt="${escapeAttr(campaign.hero.alt)}" width="1200" height="800" />
       </div>
@@ -90,7 +91,7 @@ function render(page) {
     <p>${escapeHtml(campaign.legal || "")}</p>
     <p>${escapeHtml(brand.name)} ${privacy}</p>
   </footer>
-  ${action.type === "form" ? `<div class="sticky"><a class="btn" href="#action">${escapeHtml(action.label)}</a></div>` : ""}
+  ${action.type === "form" ? `<div class="sticky"><a class="btn" ${btnStyle} href="#action">${escapeHtml(action.label)}</a></div>` : ""}
   <script>
     window.__HARNESS__ = {
       formEnabled: ${formEnabled ? "true" : "false"},
