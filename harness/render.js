@@ -54,10 +54,11 @@ function render(page) {
   <meta property="og:title" content="${escapeAttr(campaign.headline)}" />
   <meta property="og:description" content="${escapeAttr(campaign.subhead)}" />
   ${env.PUBLIC_ORIGIN ? `<link rel="canonical" href="${escapeAttr(env.PUBLIC_ORIGIN)}" />` : ""}
+  <link rel="stylesheet" href="${assetPrefix}styles.css" />
   <style>
     :root{--bg:${escapeAttr(c.bg)};--fg:${escapeAttr(c.fg)};--accent:${escapeAttr(c.accent)};--accent-fg:${escapeAttr(c.accentFg)};--muted:${escapeAttr(c.muted)}}
+    .btn, button[type="submit"]{background:var(--accent);color:var(--accent-fg)}
   </style>
-  <link rel="stylesheet" href="${assetPrefix}styles.css" />
 </head>
 <body>
   <div class="icp">${escapeHtml(campaign.icp)}</div>
