@@ -5,6 +5,9 @@ const path = require("path");
 const { loadEnv } = require("../harness/load-env");
 const { parseSafeHttpUrl } = require("../harness/urls");
 const { contrast } = require("../harness/contrast");
+const { validate } = require("../harness/schema");
+const { resolveAsset } = require("../harness/assets");
+const { pixelError } = require("../harness/pixels");
 
 const root = path.join(__dirname, "..");
 const env = loadEnv(root);
@@ -68,41 +71,58 @@ if (bodyText < 4.5) {
   fail("body text " + brand.colors.fg + " on " + brand.colors.bg + " is " + bodyText.toFixed(1) + ":1. Need 4.5:1.");
 }
 
-const logoPath = path.join(clientDir, "assets", brand.logo.file);
-if (!fs.existsSync(logoPath)) fail("missing logo asset " + brand.logo.file);
+const brandSchema = JSON.parse(fs.readFileSync(path.join(root, "schemas", "brand.schema.json"), "utf8"));
+const campaignSchema = JSON.parse(fs.readFileSync(path.join(root, "schemas", "campaign.schema.json"), "utf8"));
+for (const err of validate(brand, brandSchema, "brand.json").concat(validate(campaign, campaignSchema, "campaign.json"))) {
+  fail(err);
+}
+
+let logoPath;
+let heroPath;
+try {
+  logoPath = resolveAsset(clientDir, brand.logo.file);
+  heroPath = resolveAsset(clientDir, campaign.hero.file);
+} catch (err) {
+  fail(err.message);
+}
 if (fs.statSync(logoPath).size > MAX_LOGO) fail("logo exceeds 40kb");
+if (fs.statSync(heroPath).size > MAX_HERO) fail("hero exceeds 200kb — compress before shipping");
 
-const heroPath = path.join(clientDir, "assets", campaign.hero.file);
-if (!campaign.hero || !fs.existsSync(heroPath)) fail("missing hero asset");
-if (fs.statSync(heroPath).size > MAX_HERO) fail("hero exceeds 200kb \u2014 compress before shipping");
+const strict = process.argv.includes("--strict");
+const allowLocal = !strict;
 
-if (!campaign.headline || !campaign.primaryAction) fail("campaign missing headline or primaryAction");
-
-const allowLocal = true;
-if (campaign.primaryAction.type === "link") {
+function checkUrl(label, value) {
+  if (!value) return;
   try {
-    parseSafeHttpUrl(campaign.primaryAction.href, { allowLocalhost: allowLocal });
+    parseSafeHttpUrl(value, { allowLocalhost: allowLocal });
   } catch (err) {
-    fail("primaryAction.href " + err.message);
+    fail(label + " " + err.message);
   }
 }
 
-if (env.FORM_ENDPOINT) {
-  try {
-    parseSafeHttpUrl(env.FORM_ENDPOINT, { allowLocalhost: allowLocal });
-  } catch (err) {
-    fail("FORM_ENDPOINT " + err.message);
+if (campaign.primaryAction.type === "link") checkUrl("primaryAction.href", campaign.primaryAction.href);
+checkUrl("FORM_ENDPOINT", env.FORM_ENDPOINT);
+checkUrl("privacyUrl", brand.privacyUrl);
+if (strict) checkUrl("PUBLIC_ORIGIN", env.PUBLIC_ORIGIN);
+
+const reserved = new Set(["website", "fbclid", "gclid", "ttclid"]);
+const seen = new Set();
+for (const field of (campaign.primaryAction && campaign.primaryAction.fields) || []) {
+  if (reserved.has(field.name) || String(field.name).startsWith("utm_")) {
+    fail("field name " + field.name + " collides with a reserved field");
   }
+  if (seen.has(field.name)) fail("duplicate field name " + field.name);
+  seen.add(field.name);
 }
 
-if (brand.privacyUrl) {
-  try {
-    parseSafeHttpUrl(brand.privacyUrl, { allowLocalhost: allowLocal });
-  } catch (err) {
-    fail("privacyUrl " + err.message);
-  }
+for (const key of ["META_PIXEL_ID", "GOOGLE_ADS_ID", "GOOGLE_ADS_CONVERSION_LABEL", "GOOGLE_ADS_LEAD_LABEL", "TIKTOK_PIXEL_ID"]) {
+  const problem = pixelError(key, env[key]);
+  if (problem) fail(problem);
 }
 
 if (env.FORM_KEY && env.FORM_KEY.length < 16) fail("FORM_KEY should be at least 16 characters");
+if (env.FORM_KEY) {
+  console.log("preflight: FORM_KEY is server-only. The page never sends it. Allowlist the origin, rate-limit, and keep the honeypot.");
+}
 
-console.log("preflight ok \u2014 client=" + client);
+console.log("preflight ok — client=" + client + (strict ? " strict" : ""));

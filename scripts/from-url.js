@@ -3,7 +3,8 @@
 const fs = require("fs");
 const path = require("path");
 const { pullBrand } = require("../harness/brand-from-url");
-const { assertPublicHttps } = require("../harness/public-url");
+const { fetchPublic } = require("../harness/fetch-public");
+const { svgIsUnsafe } = require("../harness/svg-safe");
 
 const root = path.join(__dirname, "..");
 
@@ -91,17 +92,20 @@ function campaign(brand, pageUrl) {
 
 async function maybeLogo(url) {
   if (!url) return null;
-  const safe = await assertPublicHttps(url);
-  const res = await fetch(safe, {
-    redirect: "manual",
-    signal: AbortSignal.timeout(8000),
-    headers: { "User-Agent": "SeekingLeverageLandingHarness/0.1" },
-  });
-  if (!res.ok || res.status >= 300) return null;
-  const buf = Buffer.from(await res.arrayBuffer());
+  let res;
+  try {
+    res = await fetchPublic(url, "*/*", 40 * 1024);
+  } catch {
+    return null;
+  }
+  const safe = res.url;
+  const buf = res.buf;
   if (buf.length > 40 * 1024) return null;
-  const type = res.headers.get("content-type") || "";
-  if (/svg/i.test(type) || safe.pathname.endsWith(".svg")) return { file: "logo.svg", buf };
+  const type = res.type || "";
+  if (/svg/i.test(type) || safe.pathname.endsWith(".svg")) {
+    if (svgIsUnsafe(buf)) return null;
+    return { file: "logo.svg", buf };
+  }
   if (/png/i.test(type) || safe.pathname.endsWith(".png")) return { file: "logo.png", buf };
   return null;
 }

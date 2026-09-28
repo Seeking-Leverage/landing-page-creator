@@ -1,14 +1,35 @@
-name: preflight
+name: ci
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
-  preflight:
+  gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "20"
+      - run: npm test
       - run: npm run preflight
-      - run: npm run build
+      - run: node scripts/qa.js
+      - run: node scripts/build.js
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "20"
+      - name: Install Chrome
+        run: |
+          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+      - name: Headless browser QA
+        run: QA_HEADLESS=1 npm run qa
+        env:
+          QA_HEADLESS: "1"
+          CHROME_PATH: /usr/bin/google-chrome

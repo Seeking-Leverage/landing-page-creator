@@ -32,12 +32,31 @@ npm run dev
 
 Open http://127.0.0.1:4173
 
-`npm run dev` and `npm run build` run QA first. If the button label cannot be read, or Chrome cannot click it, the page does not start. Details: [docs/QA.md](docs/QA.md).
+`npm run dev` and `npm start` run QA first, including a Chrome window that clicks the button. `npm run build` does not open Chrome. It does refuse `http://` and localhost URLs, because that output is what you ship. Set `QA_HEADLESS=1` to run the click check without a window. Details: [docs/QA.md](docs/QA.md).
 
 If you already cloned this when it was named `landing-page-harness`, `git pull` still works. GitHub redirects the old URL. To point the remote at the new name:
 
 ```bash
 git remote set-url origin https://github.com/Seeking-Leverage/landing-page-creator.git
+```
+
+## Use a private copy. Do not fork
+
+A fork of this public repo is public. Client copy, logos, and endpoints do not belong there. `.gitignore` already keeps `clients/*` (except `_example`) and `.env` out of git. That still applies in your private copy.
+
+```bash
+git clone https://github.com/Seeking-Leverage/landing-page-creator.git my-pages
+cd my-pages
+git remote rename origin upstream
+gh repo create Seeking-Leverage/my-pages --private --source=. --remote=origin
+git push -u origin main
+```
+
+Later:
+
+```bash
+git fetch upstream
+git pull upstream main
 ```
 
 ## Make a page for one company
@@ -95,7 +114,15 @@ npm run build
 
 Host the `dist/` folder on Cloudflare Pages, Netlify, GitHub Pages, or any static host. HTTPS only. The checklist is [docs/GO-LIVE.md](docs/GO-LIVE.md).
 
-Pixels stay off until `META_PIXEL_ID`, `GOOGLE_ADS_ID`, or `TIKTOK_PIXEL_ID` is set in `.env`. A lead event fires when the form succeeds, not when the page loads.
+Pixels stay off until you set an ID in `.env`. A lead event fires only after the form endpoint returns success, not on page load.
+
+| Env | What loads |
+| --- | --- |
+| `META_PIXEL_ID` | Meta `PageView`, then `Lead` |
+| `GOOGLE_ADS_ID` plus `GOOGLE_ADS_CONVERSION_LABEL` or `GOOGLE_ADS_LEAD_LABEL` | Google tag, then one conversion |
+| `TIKTOK_PIXEL_ID` | TikTok page view, then `Lead` (`TIKTOK_LEAD_EVENT` overrides the name) |
+
+The content security policy in `dist/_headers` adds a vendor's hosts only when that vendor's ID is set. Google's country domains are not listed. The policy allows `https://www.google.com` only. Check Tag Assistant on the live page and add a blocked country host yourself if it reports one. GitHub Pages cannot send these headers. See [docs/GO-LIVE.md](docs/GO-LIVE.md).
 
 ## What is shared
 

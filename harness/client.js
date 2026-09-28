@@ -23,7 +23,8 @@
   }
 
   function initPixels() {
-    if (cfg.pixels && cfg.pixels.meta) {
+    if (!cfg.pixels) return;
+    if (cfg.pixels.meta) {
       !function (f, b, e, v, n, t, s) {
         if (f.fbq) return;
         n = f.fbq = function () {
@@ -39,10 +40,50 @@
       window.fbq("init", cfg.pixels.meta);
       window.fbq("track", "PageView");
     }
+    if (cfg.pixels.googleAds) {
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+      window.gtag("js", new Date());
+      window.gtag("config", cfg.pixels.googleAds);
+      loadScript("https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(cfg.pixels.googleAds));
+    }
+    if (cfg.pixels.tiktok) {
+      !(function (w, d, t) {
+        w.TiktokAnalyticsObject = t;
+        var ttq = (w[t] = w[t] || []);
+        ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
+        ttq.setAndDefer = function (obj, method) {
+          obj[method] = function () {
+            obj.push([method].concat(Array.prototype.slice.call(arguments, 0)));
+          };
+        };
+        for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+        ttq.load = function (id) {
+          ttq._i = ttq._i || {};
+          ttq._i[id] = [];
+          ttq._t = ttq._t || {};
+          ttq._t[id] = +new Date();
+          ttq._o = ttq._o || {};
+          ttq._o[id] = {};
+          var src = "https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=" + encodeURIComponent(id) + "&lib=" + t;
+          loadScript(src);
+        };
+        ttq.load(cfg.pixels.tiktok);
+        ttq.page();
+      })(window, document, "ttq");
+    }
   }
 
   function trackLead() {
     if (window.fbq) window.fbq("track", "Lead");
+    var ads = cfg.pixels && cfg.pixels.googleAds;
+    var label = cfg.pixels && (cfg.pixels.googleLeadLabel || cfg.pixels.googleLabel);
+    if (window.gtag && ads && label) {
+      window.gtag("event", "conversion", { send_to: ads + "/" + label });
+    }
+    if (window.ttq) window.ttq.track((cfg.pixels && cfg.pixels.tiktokLeadEvent) || "Lead");
   }
 
   function payloadFromForm(form) {
@@ -54,6 +95,12 @@
   }
 
   function onSubmit(e) {
+    var form = e.target;
+    if (typeof form.checkValidity === "function" && !form.checkValidity()) {
+      if (typeof form.reportValidity === "function") form.reportValidity();
+      e.preventDefault();
+      return;
+    }
     e.preventDefault();
     var form = e.target;
     var status = document.getElementById("form-status");

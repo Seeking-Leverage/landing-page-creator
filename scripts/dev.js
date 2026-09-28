@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const { loadEnv } = require("../harness/load-env");
 const { render } = require("../harness/render");
+const { resolveAsset } = require("../harness/assets");
 
 const root = path.join(__dirname, "..");
 const env = loadEnv(root);
@@ -49,8 +50,12 @@ const server = http.createServer((req, res) => {
   }
   if (url.pathname.startsWith("/assets/")) {
     const name = path.basename(url.pathname);
-    const file = path.join(clientDir, "assets", name);
-    if (!fs.existsSync(file)) return send(res, 404, "not found");
+    let file;
+    try {
+      file = resolveAsset(clientDir, name);
+    } catch {
+      return send(res, 404, "not found");
+    }
     return send(res, 200, fs.readFileSync(file), TYPES[path.extname(name)] || "application/octet-stream");
   }
   send(res, 404, "not found");

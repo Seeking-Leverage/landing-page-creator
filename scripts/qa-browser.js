@@ -10,6 +10,8 @@ const { spawn } = require("child_process");
 const { loadEnv } = require("../harness/load-env");
 const { render } = require("../harness/render");
 const { contrast } = require("../harness/contrast");
+const { qaSafeEnv } = require("../harness/qa-env");
+const { resolveAsset } = require("../harness/assets");
 
 const root = path.join(__dirname, "..");
 
@@ -192,6 +194,9 @@ const PROBE = `(async () => {
     buttons.push({ text: (el.innerText || "").trim(), color: cs.color, background: cs.backgroundColor });
   }
   const primary = document.querySelector("#action button[type=submit], #action a.btn") || nodes[0];
+  document.querySelectorAll("#lead-form input[required]").forEach(function (el) {
+    if (!el.value) el.value = el.type === "email" ? "qa@example.com" : "QA";
+  });
   if (primary) {
     primary.click();
     await sleep(400);
@@ -209,7 +214,7 @@ async function main() {
   const chrome = findChrome();
   if (!chrome) fail("no browser. QA will not pass on source alone. Install Chrome or set CHROME_PATH.");
 
-  const env = loadEnv(root);
+  const env = qaSafeEnv(loadEnv(root));
   const client = env.CLIENT || "_example";
   const clientDir = path.join(root, "clients", client);
   const brand = JSON.parse(fs.readFileSync(path.join(clientDir, "brand.json"), "utf8"));
@@ -219,28 +224,38 @@ async function main() {
   fs.writeFileSync(path.join(dir, "index.html"), render({ brand, campaign, env, assetPrefix: "" }));
   fs.copyFileSync(path.join(root, "harness", "styles.css"), path.join(dir, "styles.css"));
   fs.copyFileSync(path.join(root, "harness", "client.js"), path.join(dir, "client.js"));
-  fs.cpSync(path.join(clientDir, "assets"), path.join(dir, "assets"), { recursive: true });
+  for (const name of fs.readdirSync(path.join(clientDir, "assets"))) {
+    const file = resolveAsset(clientDir, name);
+    const destDir = path.join(dir, "assets");
+    fs.mkdirSync(destDir, { recursive: true });
+    fs.copyFileSync(file, path.join(destDir, name));
+  }
 
   const { server, port } = await serve(dir);
-  const debug = port + 1;
+  const headless = process.env.QA_HEADLESS === "1" || process.env.QA_HEADLESS === "true" || process.env.CI === "true";
   const pageUrl = "http://127.0.0.1:" + port + "/";
-  const child = spawn(
-    chrome,
-    [
-      "--new-window",
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-sync",
-      "--user-data-dir=" + profile,
-      "--remote-debugging-port=" + debug,
-      "--remote-allow-origins=*",
-      pageUrl,
-    ],
-    { stdio: "ignore" }
-  );
+  const chromeArgs = [
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-sync",
+    "--user-data-dir=" + profile,
+    "--remote-debugging-port=0",
+  ];
+  if (headless) chromeArgs.push("--headless=new", "--disable-gpu");
+  else chromeArgs.push("--new-window");
+  if (process.env.CI === "true") chromeArgs.push("--no-sandbox", "--disable-dev-shm-usage");
+  chromeArgs.push(pageUrl);
+  const child = spawn(chrome, chromeArgs, { stdio: "ignore" });
 
   let cdp;
   try {
+    let debug = "";
+    for (let i = 0; i < 50 && !debug; i++) {
+      await sleep(200);
+      const portFile = path.join(profile, "DevToolsActivePort");
+      if (fs.existsSync(portFile)) debug = fs.readFileSync(portFile, "utf8").split("\n")[0].trim();
+    }
+    if (!debug) fail("Chrome opened but the page never attached. QA cannot pass without the click.");
     let target = null;
     for (let i = 0; i < 40 && !target; i++) {
       await sleep(250);
@@ -283,10 +298,18 @@ async function main() {
     await sleep(800);
   } finally {
     if (cdp) cdp.close();
-    child.kill("SIGTERM");
+    if (child.exitCode === null) child.kill("SIGTERM");
+    await new Promise((resolve) => {
+      if (child.exitCode !== null) return resolve();
+      const timer = setTimeout(resolve, 3000);
+      child.once("exit", () => {
+        clearTimeout(timer);
+        resolve();
+      });
+    });
     server.close();
     fs.rmSync(dir, { recursive: true, force: true });
-    fs.rmSync(profile, { recursive: true, force: true });
+    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   }
 }
 

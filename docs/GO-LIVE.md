@@ -22,6 +22,17 @@ Paid traffic dies on slow or broken pages. Run this before you spend.
 - [ ] Facebook in-app browser
 - [ ] Desktop Chrome + Safari
 
+## Headers
+
+`dist/_headers` is generated from your `.env`. Copy that file's values. Do not invent a second policy.
+
+- Netlify and Cloudflare Pages read `_headers` as shipped.
+- Vercel needs the same `Content-Security-Policy` copied into `vercel.json` `headers`.
+- nginx: `add_header` in the location that serves the page. A location-level `add_header` replaces server-level ones, so repeat every header there.
+- GitHub Pages cannot set headers. Put a CDN that can in front of it, or host somewhere else.
+
+Google Ads is allowed to talk to `https://www.google.com` only. Country hosts such as `https://www.google.co.uk` are not in the policy. Open Tag Assistant on the live page. If it reports a blocked Google host, add that exact origin. CSP cannot wildcard a TLD.
+
 ## Tracking
 - [ ] UTMs and `fbclid` / `gclid` / `ttclid` persist as hidden fields
 - [ ] View event fires once

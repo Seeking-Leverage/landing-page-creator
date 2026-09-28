@@ -1,6 +1,6 @@
 "use strict";
 
-const { assertPublicHttps } = require("./public-url");
+const { fetchPublic } = require("./fetch-public");
 
 const MAX_HTML = 1_500_000;
 const MAX_CSS = 400_000;
@@ -109,30 +109,6 @@ function abs(base, href) {
   } catch {
     return null;
   }
-}
-
-async function fetchPublic(raw, accept) {
-  let current = await assertPublicHttps(raw);
-  for (let hop = 0; hop <= MAX_HOPS; hop++) {
-    const res = await fetch(current, {
-      redirect: "manual",
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: {
-        "User-Agent": "SeekingLeverageLandingCreator/0.1 (+https://github.com/Seeking-Leverage/landing-page-creator)",
-        Accept: accept,
-      },
-    });
-    if (res.status >= 300 && res.status < 400) {
-      const loc = res.headers.get("location");
-      if (!loc) throw new Error("Redirect with no location");
-      current = await assertPublicHttps(new URL(loc, current).href);
-      continue;
-    }
-    if (!res.ok) throw new Error("Fetch failed: HTTP " + res.status);
-    const buf = Buffer.from(await res.arrayBuffer());
-    return { url: current, buf, type: res.headers.get("content-type") || "" };
-  }
-  throw new Error("Too many redirects");
 }
 
 function stylesheetHrefs(html, pageUrl) {

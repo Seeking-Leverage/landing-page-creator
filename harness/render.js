@@ -1,6 +1,8 @@
 "use strict";
 
 const { escapeHtml, escapeAttr } = require("./escape");
+const { inlineJson } = require("./inline-json");
+const { assertAssetName } = require("./assets");
 
 function list(items, fn) {
   return (items || []).map(fn).join("");
@@ -15,6 +17,8 @@ function render(page) {
     ? `<a href="${escapeAttr(brand.privacyUrl)}" rel="noopener noreferrer">Privacy</a>`
     : "";
 
+  assertAssetName(brand.logo.file);
+  assertAssetName(campaign.hero.file);
   const btnStyle = `style="background:${escapeAttr(c.accent)};color:${escapeAttr(c.accentFg)}"`;
   const fields = list(action.fields, (f) => {
     const req = f.required ? "required" : "";
@@ -26,7 +30,7 @@ function render(page) {
     action.type === "form"
       ? `<section class="form-card wrap" id="action">
   <h2>${escapeHtml(action.label)}</h2>
-  <form id="lead-form" method="post" action="#" novalidate>
+  <form id="lead-form" method="post" action="#">
     ${fields}
     <p class="hp" aria-hidden="true"><label>Company website<input name="website" tabindex="-1" autocomplete="off" /></label></p>
     <input type="hidden" name="utm_source" />
@@ -93,16 +97,18 @@ function render(page) {
   </footer>
   ${action.type === "form" ? `<div class="sticky"><a class="btn" ${btnStyle} href="#action">${escapeHtml(action.label)}</a></div>` : ""}
   <script>
-    window.__HARNESS__ = {
-      formEnabled: ${formEnabled ? "true" : "false"},
-      formEndpoint: ${JSON.stringify(formEnabled ? env.FORM_ENDPOINT : "")},
+    window.__HARNESS__ = ${inlineJson({
+      formEnabled,
+      formEndpoint: formEnabled ? env.FORM_ENDPOINT : "",
       pixels: {
-        meta: ${JSON.stringify(env.META_PIXEL_ID || "")},
-        googleAds: ${JSON.stringify(env.GOOGLE_ADS_ID || "")},
-        googleLabel: ${JSON.stringify(env.GOOGLE_ADS_CONVERSION_LABEL || "")},
-        tiktok: ${JSON.stringify(env.TIKTOK_PIXEL_ID || "")}
-      }
-    };
+        meta: env.META_PIXEL_ID || "",
+        googleAds: env.GOOGLE_ADS_ID || "",
+        googleLabel: env.GOOGLE_ADS_CONVERSION_LABEL || "",
+        googleLeadLabel: env.GOOGLE_ADS_LEAD_LABEL || "",
+        tiktok: env.TIKTOK_PIXEL_ID || "",
+        tiktokLeadEvent: env.TIKTOK_LEAD_EVENT || "",
+      },
+    })};
   </script>
   <script src="${assetPrefix}client.js" defer></script>
 </body>
