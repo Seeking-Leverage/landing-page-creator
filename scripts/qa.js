@@ -6,6 +6,7 @@ const { spawnSync } = require("child_process");
 const { loadEnv } = require("../harness/load-env");
 const { render } = require("../harness/render");
 const { contrast } = require("../harness/contrast");
+const { escapeHtml } = require("../harness/escape");
 
 const root = path.join(__dirname, "..");
 const pre = spawnSync(process.execPath, ["scripts/preflight.js"], {
@@ -49,7 +50,7 @@ const actions = html.split('id="action"').length - 1;
 if (actions !== 1) fail("expected one #action, found " + actions);
 
 const label = campaign.primaryAction.label;
-const ctaCount = html.split(">" + label + "<").length - 1;
+const ctaCount = html.split(">" + escapeHtml(label) + "<").length - 1;
 if (ctaCount < 1) fail("CTA label is not in the page");
 
 if (campaign.primaryAction.type === "form") {
@@ -58,6 +59,25 @@ if (campaign.primaryAction.type === "form") {
 }
 
 if (/javascript:/i.test(html)) fail("javascript: URL in the page");
+if (/id="pid"|name="jid"/.test(html)) fail("page uses an id or name Appcast's pixel reads");
+
+if (String(client).startsWith("hetal")) {
+  if (html.includes("Match found!") || html.includes("You qualify for immediate onboarding.")) {
+    fail("old qualification copy is still in the page");
+  }
+  if (/\$40\s*[–—-]\s*\$60/.test(html)) fail("earnings claim is still in the page");
+  if (!html.includes("Next step: download the app to see audits available near you")) {
+    fail("honest next-step line is missing");
+  }
+  if (html.includes("Checking retail coverage in your area") || html.includes("Verifying active Brand Analyst openings")) {
+    fail("scan lines still imply a live coverage check");
+  }
+  if (!html.includes("Loading audit details…") || !html.includes("Almost done…")) {
+    fail("scan lines are missing");
+  }
+  if (!html.includes("Thanks! Opening the app store")) fail("thank-you step is missing");
+  if (!html.includes("Open the app store")) fail("thank-you fallback button is missing");
+}
 
 const exampleAccent = "#b8f26d";
 if (client !== "_example" && c.accent.toLowerCase() !== exampleAccent && css.toLowerCase().includes(exampleAccent)) {

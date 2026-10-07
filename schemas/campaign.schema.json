@@ -74,6 +74,93 @@
         }
       }
     },
-    "legal": { "type": "string", "maxLength": 280 }
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 80
+    },
+    "defaultSource": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 40
+    },
+    "oneLink": { "type": "string", "maxLength": 300 },
+    "thankYou": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "redirectDelayMs": { "type": "integer", "minimum": 0, "maximum": 10000 }
+      }
+    },
+    "showEarningsPotential": { "type": "boolean" },
+    "earningsSource": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "legal": { "type": "string", "maxLength": 280 },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stores", "continueLabel", "roleTitle", "roles", "checks", "matchLabel", "matchLines", "matchOutcome", "payTitle", "pay", "finalTitle", "finalBody"],
+      "properties": {
+        "storesPrompt": { "type": "string", "maxLength": 80 },
+        "stores": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+        },
+        "continueLabel": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "roleTitle": { "type": "string", "maxLength": 80 },
+        "roles": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "body"],
+            "properties": {
+              "title": { "type": "string", "maxLength": 40 },
+              "body": { "type": "string", "maxLength": 240 }
+            }
+          }
+        },
+        "checksLegend": { "type": "string", "maxLength": 80 },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": { "type": "string", "maxLength": 160 }
+        },
+        "matchLabel": { "type": "string", "maxLength": 48 },
+        "matchLines": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": { "type": "string", "maxLength": 80 }
+        },
+        "matchOutcome": { "type": "string", "maxLength": 120 },
+        "payTitle": { "type": "string", "maxLength": 80 },
+        "pay": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value", "label", "detail"],
+            "properties": {
+              "value": { "type": "string", "maxLength": 24 },
+              "label": { "type": "string", "maxLength": 40 },
+              "detail": { "type": "string", "maxLength": 200 }
+            }
+          }
+        },
+        "finalTitle": { "type": "string", "maxLength": 80 },
+        "finalBody": { "type": "string", "maxLength": 220 },
+        "reassurance": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "type": "string", "maxLength": 140 }
+        }
+      }
+    }
   }
 }

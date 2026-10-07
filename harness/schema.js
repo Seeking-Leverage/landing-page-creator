@@ -14,6 +14,9 @@ const ALLOWED = new Set([
   "pattern",
   "enum",
   "maxItems",
+  "minItems",
+  "minimum",
+  "maximum",
   "items",
 ]);
 
@@ -62,6 +65,9 @@ function check(data, schema, path, errors) {
     if (schema.maxItems != null && data.length > schema.maxItems) {
       fail(errors, path, "has " + data.length + " items, max " + schema.maxItems);
     }
+    if (schema.minItems != null && data.length < schema.minItems) {
+      fail(errors, path, "has " + data.length + " items, min " + schema.minItems);
+    }
     if (schema.items) data.forEach((item, i) => check(item, schema.items, path + "[" + i + "]", errors));
     return;
   }
@@ -78,6 +84,15 @@ function check(data, schema, path, errors) {
   }
   if (schema.type === "boolean") {
     if (typeof data !== "boolean") fail(errors, path, "must be true or false");
+    return;
+  }
+  if (schema.type === "integer") {
+    if (typeof data !== "number" || !Number.isInteger(data)) {
+      fail(errors, path, "must be an integer");
+      return;
+    }
+    if (schema.minimum != null && data < schema.minimum) fail(errors, path, "is below " + schema.minimum);
+    if (schema.maximum != null && data > schema.maximum) fail(errors, path, "is above " + schema.maximum);
     return;
   }
   throw new Error("schema type not enforced: " + schema.type + " at " + path);

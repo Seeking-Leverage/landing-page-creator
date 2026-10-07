@@ -7,7 +7,7 @@ const { parseSafeHttpUrl } = require("../harness/urls");
 const { contrast } = require("../harness/contrast");
 const { validate } = require("../harness/schema");
 const { resolveAsset } = require("../harness/assets");
-const { pixelError } = require("../harness/pixels");
+const { pixelError, pixelConfig } = require("../harness/pixels");
 
 const root = path.join(__dirname, "..");
 const env = loadEnv(root);
@@ -91,6 +91,16 @@ if (fs.statSync(heroPath).size > MAX_HERO) fail("hero exceeds 200kb — compress
 const strict = process.argv.includes("--strict");
 const allowLocal = !strict;
 
+if (brand.icon && brand.icon.file) {
+  let iconPath;
+  try {
+    iconPath = resolveAsset(clientDir, brand.icon.file);
+  } catch (err) {
+    fail(err.message);
+  }
+  if (fs.statSync(iconPath).size > MAX_HERO) fail("icon exceeds 200kb");
+}
+
 function checkUrl(label, value) {
   if (!value) return;
   try {
@@ -101,11 +111,13 @@ function checkUrl(label, value) {
 }
 
 if (campaign.primaryAction.type === "link") checkUrl("primaryAction.href", campaign.primaryAction.href);
+checkUrl("oneLink", campaign.oneLink);
 checkUrl("FORM_ENDPOINT", env.FORM_ENDPOINT);
 checkUrl("privacyUrl", brand.privacyUrl);
+checkUrl("siteUrl", brand.siteUrl);
 if (strict) checkUrl("PUBLIC_ORIGIN", env.PUBLIC_ORIGIN);
 
-const reserved = new Set(["website", "fbclid", "gclid", "ttclid"]);
+const reserved = new Set(["website", "source", "ccuid", "fbclid", "gclid", "ttclid"]);
 const seen = new Set();
 for (const field of (campaign.primaryAction && campaign.primaryAction.fields) || []) {
   if (reserved.has(field.name) || String(field.name).startsWith("utm_")) {
@@ -115,9 +127,62 @@ for (const field of (campaign.primaryAction && campaign.primaryAction.fields) ||
   seen.add(field.name);
 }
 
+if (campaign.flow) {
+  const flow = campaign.flow;
+  if (!Array.isArray(flow.stores) || !flow.stores.length) fail("flow.stores required");
+  if (!Array.isArray(flow.roles) || !flow.roles.length) fail("flow.roles required");
+  if (!Array.isArray(flow.checks) || !flow.checks.length) fail("flow.checks required");
+  if (!Array.isArray(flow.matchLines) || flow.matchLines.length < 2) fail("flow.matchLines required");
+  if (!Array.isArray(flow.pay) || !flow.pay.length) fail("flow.pay required");
+  if (campaign.primaryAction.type !== "link") fail("a flow page needs primaryAction.type link");
+  const earnings = (item) =>
+    item && (/earnings potential/i.test(item.label || "") || /\$40/.test(item.value || ""));
+  const hasEarningsCard = flow.pay.some(earnings) || earnings(flow.earnings);
+  if (campaign.showEarningsPotential === true) {
+    if (!campaign.earningsSource || !String(campaign.earningsSource).trim()) {
+      fail("showEarningsPotential requires earningsSource (a link, doc, or date for the claim)");
+    }
+    if (!hasEarningsCard) fail("showEarningsPotential requires the earnings card in flow.pay");
+  } else if (hasEarningsCard) {
+    fail("remove the $40–$60 earnings card, or set showEarningsPotential and earningsSource");
+  }
+}
+
+const slugOk = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+if (campaign.slug && !slugOk.test(campaign.slug)) fail("slug must be lowercase words separated by hyphens");
+if (campaign.defaultSource && !slugOk.test(campaign.defaultSource)) {
+  fail("defaultSource must be lowercase words separated by hyphens");
+}
+if (campaign.defaultSource && campaign.defaultSource.endsWith("_int")) {
+  fail("defaultSource must not end in _int");
+}
+if (
+  campaign.oneLink &&
+  campaign.primaryAction.href &&
+  campaign.oneLink !== campaign.primaryAction.href
+) {
+  fail("oneLink and primaryAction.href must match so the QR and the button share a base link");
+}
+if (campaign.thankYou && campaign.thankYou.enabled === true) {
+  if (!campaign.slug) fail("thankYou.enabled requires slug");
+  if (!campaign.defaultSource) fail("thankYou.enabled requires defaultSource");
+  if (!campaign.oneLink && !(campaign.primaryAction && campaign.primaryAction.href)) {
+    fail("thankYou.enabled requires oneLink");
+  }
+  const delay = campaign.thankYou.redirectDelayMs;
+  if (delay != null && (!Number.isInteger(delay) || delay < 0 || delay > 10000)) {
+    fail("thankYou.redirectDelayMs must be an integer from 0 to 10000");
+  }
+}
+
 for (const key of ["META_PIXEL_ID", "GOOGLE_ADS_ID", "GOOGLE_ADS_CONVERSION_LABEL", "GOOGLE_ADS_LEAD_LABEL", "TIKTOK_PIXEL_ID"]) {
   const problem = pixelError(key, env[key]);
   if (problem) fail(problem);
+}
+try {
+  pixelConfig(env);
+} catch (err) {
+  fail(err.message);
 }
 
 if (env.FORM_KEY && env.FORM_KEY.length < 16) fail("FORM_KEY should be at least 16 characters");

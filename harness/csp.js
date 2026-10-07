@@ -27,6 +27,12 @@ function buildCsp(opts) {
     img.push("https://analytics.tiktok.com", "https://ads.tiktok.com");
     frame.push("https://ads.tiktok.com");
   }
+  // generic3-29483.js beacons with a hidden Image pointed at click.appcast.io/*.png.
+  // That is img-src. It does not call fetch, XHR, or sendBeacon, so connect-src stays closed.
+  if (opts.appcast) {
+    script.push("https://click.appcast.io");
+    img.push("https://click.appcast.io");
+  }
   if (opts.formOrigin) connect.push(opts.formOrigin);
   const parts = [
     "default-src 'self'",
