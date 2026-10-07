@@ -29,6 +29,16 @@
         "alt": { "type": "string", "minLength": 1, "maxLength": 80 }
       }
     },
+    "icon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string", "pattern": "^[A-Za-z0-9._-]+\\.(svg|png|webp)$" },
+        "alt": { "type": "string", "maxLength": 80 }
+      }
+    },
+    "siteUrl": { "type": "string", "maxLength": 300 },
     "privacyUrl": { "type": "string", "maxLength": 300 }
   }
 }
