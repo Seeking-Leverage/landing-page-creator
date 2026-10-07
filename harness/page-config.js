@@ -14,6 +14,7 @@ function pageConfig(campaign, env) {
       slug: (campaign && campaign.slug) || "",
       defaultSource: (campaign && campaign.defaultSource) || "",
       oneLink: (campaign && campaign.oneLink) || action.href || "",
+      publisherBoard: Boolean(campaign && campaign.publisherBoard),
       thankYou: {
         enabled: thankYou.enabled === true,
         redirectDelayMs: Number.isInteger(delay) ? delay : 1500,

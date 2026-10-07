@@ -9,6 +9,7 @@ const {
   cleanValue,
   readAllowlist,
   mergeAttribution,
+  publisherBoard,
   buildOneLink,
   publicSearch,
   thanksPlan,
@@ -98,6 +99,81 @@ test("no params uses the page source and slug and omits af_sub1", () => {
   assert.equal(params.get("c"), "onboarding-monster");
   assert.equal(params.get("af_sub1"), null);
   assert.equal(params.get("af_sub3"), null);
+});
+
+test("publisher board is the text before the first hyphen", () => {
+  assert.deepEqual(publisherBoard("talroo-cpc_usd"), { board: "talroo", publisher: "talroo-cpc_usd" });
+  assert.deepEqual(publisherBoard("adzuna-cpa_usd"), { board: "adzuna", publisher: "adzuna-cpa_usd" });
+  assert.deepEqual(publisherBoard("monster-direct-cpc_usd"), { board: "monster", publisher: "monster-direct-cpc_usd" });
+  assert.equal(publisherBoard(""), null);
+  assert.equal(publisherBoard(undefined), null);
+  assert.equal(publisherBoard("   "), null);
+  assert.equal(publisherBoard("Talroo-cpc_usd"), null);
+  assert.equal(publisherBoard("talroo.cpc"), null);
+  assert.equal(publisherBoard("talroo cpc"), null);
+  assert.equal(publisherBoard("-cpc_usd"), null);
+  assert.equal(publisherBoard("person@example.com"), null);
+  assert.equal(publisherBoard("555-123-4567"), null);
+  assert.equal(publisherBoard("5551234567"), null);
+});
+
+test("jobboard OneLink uses the board as pid and the publisher as af_sub4", () => {
+  const page = { slug: "onboarding-jobboard", defaultSource: "jobboard", publisherBoard: true };
+  const samples = [
+    ["talroo-cpc_usd", "talroo"],
+    ["adzuna-cpa_usd", "adzuna"],
+    ["monster-direct-cpc_usd", "monster"],
+  ];
+  for (const [medium, board] of samples) {
+    const params = paramsOf(buildOneLink(BASE, {
+      source: "indeed",
+      utm_source: "jobboard",
+      utm_medium: medium,
+      utm_campaign: "cleveland-oh",
+      ccuid: "TEST123",
+      email: "person@example.com",
+      phone: "555-123-4567",
+    }, page));
+    assert.equal(params.get("pid"), board, medium);
+    assert.equal(params.get("af_sub4"), medium, medium);
+    assert.equal(params.get("c"), "cleveland-oh", medium);
+    assert.equal(params.get("af_sub1"), "TEST123", medium);
+    assert.equal(params.get("af_sub2"), "onboarding-jobboard", medium);
+    assert.equal(params.get("af_sub3"), "ccuid", medium);
+    assert.equal(params.get("utm_source"), "jobboard", medium);
+    assert.equal(params.get("utm_medium"), medium, medium);
+    assert.equal(params.get("utm_campaign"), "cleveland-oh", medium);
+    assert.equal(params.get("email"), null, medium);
+    assert.equal(params.get("phone"), null, medium);
+  }
+
+  const missing = paramsOf(buildOneLink(BASE, {
+    utm_source: "jobboard",
+    utm_campaign: "cleveland-oh",
+    ccuid: "TEST123",
+  }, page));
+  assert.equal(missing.get("pid"), "jobboard");
+  assert.equal(missing.get("af_sub4"), null);
+  assert.equal(missing.get("utm_medium"), null);
+  assert.equal(missing.get("c"), "cleveland-oh");
+  assert.equal(missing.get("af_sub1"), "TEST123");
+  assert.equal(missing.get("af_sub2"), "onboarding-jobboard");
+  assert.equal(missing.get("af_sub3"), "ccuid");
+
+  const bad = paramsOf(buildOneLink(BASE, {
+    utm_medium: "Talroo-cpc_usd",
+    utm_campaign: "cleveland-oh",
+    ccuid: "TEST123",
+  }, page));
+  assert.equal(bad.get("pid"), "jobboard");
+  assert.equal(bad.get("af_sub4"), null);
+  assert.equal(bad.get("utm_medium"), null);
+
+  const phone = paramsOf(buildOneLink(BASE, { utm_medium: "555-123-4567", ccuid: "TEST123" }, page));
+  assert.equal(phone.get("pid"), "jobboard");
+  assert.equal(phone.get("af_sub4"), null);
+  assert.equal(phone.get("af_sub1"), "TEST123");
+  assert.equal(phone.get("af_sub3"), "ccuid");
 });
 
 test("pid prefers source, then utm_medium, then defaultSource, and never ends in _int", () => {
@@ -229,6 +305,12 @@ test("both Hetal campaigns use the honest copy and their own source", () => {
       defaultSource: "indeed",
       oneLink: "https://hetalretail.onelink.me/sfUI/ivko2j6b",
     },
+    "hetal-jobboard": {
+      slug: "onboarding-jobboard",
+      defaultSource: "jobboard",
+      oneLink: "https://hetalretail.onelink.me/sfUI/est2cthl",
+      publisherBoard: true,
+    },
   };
   const names = Object.keys(expected).filter((name) => {
     return fs.existsSync(path.join(__dirname, "..", "clients", name, "campaign.json"));
@@ -250,6 +332,7 @@ test("both Hetal campaigns use the honest copy and their own source", () => {
     assert.equal(campaign.primaryAction.href, spec.oneLink);
     assert.equal(campaign.thankYou.enabled, true);
     assert.equal(campaign.showEarningsPotential, false);
+    assert.equal(Boolean(campaign.publisherBoard), Boolean(spec.publisherBoard), name);
     assert.equal(blob.includes("Loading audit details…"), true, name);
     assert.equal(blob.includes("Almost done…"), true, name);
     assert.equal(blob.includes("Checking retail coverage in your area..."), false, name);

@@ -84,11 +84,24 @@
     return pid;
   }
 
+  // Job-board utm_medium is the publisher, such as talroo-cpc_usd. The board is
+  // the text before the first hyphen. Only lowercase letters, numbers, hyphens,
+  // and underscores are accepted. Anything else is treated as missing.
+  function publisherBoard(value) {
+    var clean = cleanValue(value);
+    if (!clean || !/^[a-z0-9_-]+$/.test(clean)) return null;
+    var board = clean.split("-")[0];
+    if (!board) return null;
+    return { board: board, publisher: clean };
+  }
+
   function buildOneLink(base, attr, page) {
     var url = new URL(base);
     var slug = (page && page.slug) || "";
     var defaultSource = (page && page.defaultSource) || "";
-    var pid = sitePid(attr || {}, defaultSource);
+    var fromPublisher = Boolean(page && page.publisherBoard);
+    var parsed = fromPublisher ? publisherBoard(attr && attr.utm_medium) : null;
+    var pid = fromPublisher ? (parsed ? parsed.board : (defaultSource || "jobboard")) : sitePid(attr || {}, defaultSource);
     var campaign = (attr && attr.utm_campaign) || slug;
     var i;
     if (pid) url.searchParams.set("pid", pid);
@@ -107,8 +120,13 @@
       url.searchParams.set("af_sub3", clickName);
     }
     if (slug) url.searchParams.set("af_sub2", slug);
+    if (fromPublisher && parsed) url.searchParams.set("af_sub4", parsed.publisher);
     for (i = 0; i < UTM.length; i++) {
       var key = UTM[i];
+      if (fromPublisher && key === "utm_medium") {
+        if (parsed && !url.searchParams.get(key)) url.searchParams.set(key, parsed.publisher);
+        continue;
+      }
       if (attr && attr[key] && !url.searchParams.get(key)) url.searchParams.set(key, attr[key]);
     }
     return url.toString();
@@ -150,6 +168,7 @@
     readAllowlist: readAllowlist,
     mergeAttribution: mergeAttribution,
     sitePid: sitePid,
+    publisherBoard: publisherBoard,
     buildOneLink: buildOneLink,
     publicSearch: publicSearch,
     isThanksUrl: isThanksUrl,
