@@ -308,7 +308,7 @@ test("both Hetal campaigns use the honest copy and their own source", () => {
     "hetal-jobboard": {
       slug: "onboarding-jobboard",
       defaultSource: "jobboard",
-      oneLink: "https://hetalretail.onelink.me/sfUI/est2cthl",
+      oneLink: "https://hetalretail.onelink.me/sfUI/806t2kji",
       publisherBoard: true,
     },
   };
