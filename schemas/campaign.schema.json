@@ -85,6 +85,7 @@
       "maxLength": 40
     },
     "oneLink": { "type": "string", "maxLength": 300 },
+    "publisherBoard": { "type": "boolean" },
     "thankYou": {
       "type": "object",
       "additionalProperties": false,

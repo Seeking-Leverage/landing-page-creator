@@ -376,7 +376,10 @@ async function runFlowChecks(cdp, pageUrl, campaign) {
   function assertLink(href) {
     const params = new URL(href).searchParams;
     const problems = [];
+    const medium = campaign.publisherBoard ? "monster-direct-cpc_usd" : "monster";
     if (params.get("pid") !== "monster") problems.push("pid=" + params.get("pid"));
+    if (campaign.publisherBoard && params.get("af_sub4") !== medium) problems.push("af_sub4=" + params.get("af_sub4"));
+    if (!campaign.publisherBoard && params.get("af_sub4")) problems.push("af_sub4=" + params.get("af_sub4"));
     if (params.get("c") !== "cleveland-oh") problems.push("c=" + params.get("c"));
     if (params.get("af_sub1") !== "TEST123") problems.push("af_sub1=" + params.get("af_sub1"));
     if (params.get("af_sub2") !== campaign.slug) problems.push("af_sub2=" + params.get("af_sub2"));
@@ -397,7 +400,7 @@ async function runFlowChecks(cdp, pageUrl, campaign) {
   const flowUrl = new URL(pageUrl);
   flowUrl.searchParams.set("source", "monster");
   flowUrl.searchParams.set("utm_source", "jobboard");
-  flowUrl.searchParams.set("utm_medium", "monster");
+  flowUrl.searchParams.set("utm_medium", campaign.publisherBoard ? "monster-direct-cpc_usd" : "monster");
   flowUrl.searchParams.set("utm_campaign", "cleveland-oh");
   flowUrl.searchParams.set("ccuid", "TEST123");
   flowUrl.searchParams.set("email", "person@example.com");

@@ -57,4 +57,18 @@ test("page config carries the thank-you delay and leaves pixels off", () => {
   assert.equal(cfg.page.thankYou.redirectDelayMs, 1500);
   assert.equal(cfg.pixels.appcast, "");
   assert.equal(cfg.page.slug, "onboarding-craigslist");
+  assert.equal(cfg.page.publisherBoard, false);
+
+  const jobboard = pageConfig(
+    {
+      slug: "onboarding-jobboard",
+      defaultSource: "jobboard",
+      publisherBoard: true,
+      thankYou: { enabled: true, redirectDelayMs: 1500 },
+    },
+    {}
+  );
+  assert.equal(jobboard.page.publisherBoard, true);
+  assert.equal(jobboard.page.slug, "onboarding-jobboard");
+  assert.equal(jobboard.page.defaultSource, "jobboard");
 });
