@@ -2,6 +2,14 @@
 
 Dated notes for releases. Add one when the behavior, the commands, or the security rules change.
 
+## Unreleased
+
+- QA blanks `APPCAST_PIXEL_URL` along with the other pixel ids. A flow thank-you check loads a fixed Appcast fixture, not the URL from `.env`.
+- The lead form ignores a second submit until the request finishes, and turns the button back on if the send fails.
+- Flow QA checks the campaign spec (match lines, unsourced earnings cards, thank-you step) instead of a client-name prefix.
+- The Webflow embed scopes CSS under `.lpc-flow`, uses the file’s image type in data URIs, and still builds when `sips` is missing.
+- Brand import rejects an SVG event handler written as `<svg/onload=…>` and an illegal numeric character reference, instead of saving the file or crashing.
+
 ## v0.2 — 28 Sep 2026
 
 - Renamed the project from landing-page-harness to Landing Page Creator.

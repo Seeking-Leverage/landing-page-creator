@@ -112,7 +112,6 @@
       return;
     }
     e.preventDefault();
-    var form = e.target;
     var status = document.getElementById("form-status");
     var data = payloadFromForm(form);
     if (data.website) {
@@ -123,6 +122,10 @@
       if (status) status.textContent = "Form endpoint is not configured. Set FORM_ENDPOINT in .env.";
       return;
     }
+    if (form.__lpcBusy) return;
+    form.__lpcBusy = true;
+    var button = typeof form.querySelector === "function" ? form.querySelector('button[type="submit"]') : null;
+    if (button) button.disabled = true;
     var headers = { "Content-Type": "application/json", Accept: "application/json" };
     if (status) status.textContent = "Sending…";
     fetch(cfg.formEndpoint, {
@@ -138,6 +141,8 @@
         trackLead();
       })
       .catch(function () {
+        form.__lpcBusy = false;
+        if (button) button.disabled = false;
         if (status) status.textContent = "Could not send. Try again.";
       });
   }

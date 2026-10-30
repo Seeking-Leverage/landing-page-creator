@@ -16,7 +16,7 @@
 
 Then a Chrome window opens on top of your work. Each button is outlined, then clicked. QA reads the colors Chrome actually painted and fails if the label disappears into the fill. The window closes after the click.
 
-QA strips `FORM_ENDPOINT` and every pixel ID before it renders, so the click cannot post a lead or call Meta, Google, or TikTok. With those values set in `.env`, a normal `npm run dev` still uses them. Only the check is blank.
+QA strips `FORM_ENDPOINT` and every pixel ID, including Appcast, before it renders, so the click cannot post a lead or call Meta, Google, TikTok, or Appcast. With those values set in `.env`, a normal page still uses them. Only the check is blank. A flow page with a thank-you step loads a fixed Appcast fixture during the click check, never the URL from `.env`.
 
 `QA_HEADLESS=1` runs the same click without a window. CI sets that. No Chrome means QA fails. Set `CHROME_PATH` if Chrome is not in the usual place.
 

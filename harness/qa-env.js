@@ -9,6 +9,7 @@ function qaSafeEnv(env) {
     GOOGLE_ADS_LEAD_LABEL: "",
     TIKTOK_PIXEL_ID: "",
     TIKTOK_LEAD_EVENT: "",
+    APPCAST_PIXEL_URL: "",
   });
 }
 

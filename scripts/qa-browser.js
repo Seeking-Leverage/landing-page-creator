@@ -477,7 +477,9 @@ async function main() {
   const brand = JSON.parse(fs.readFileSync(path.join(clientDir, "brand.json"), "utf8"));
   const campaign = JSON.parse(fs.readFileSync(path.join(clientDir, "campaign.json"), "utf8"));
   const qaEnv = { ...env };
-  if (campaign.flow && campaign.thankYou && campaign.thankYou.enabled && !qaEnv.APPCAST_PIXEL_URL) {
+  // qaSafeEnv already cleared APPCAST_PIXEL_URL. This fixture is only for the
+  // local click check, so a real pixel in .env cannot fire during QA.
+  if (campaign.flow && campaign.thankYou && campaign.thankYou.enabled) {
     qaEnv.APPCAST_PIXEL_URL = "https://click.appcast.io/pixels/generic3-29483.js?ent=325";
   }
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "harness-qa-"));

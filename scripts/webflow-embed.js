@@ -13,21 +13,30 @@ const env = loadEnv(root);
 const client = env.CLIENT || "_example";
 const clientDir = path.join(root, "clients", client);
 const outDir = path.join(clientDir, "webflow");
+const SCOPE = ".lpc-flow";
+const MIME = {
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".avif": "image/avif",
+};
 
 function scopeSelector(selector) {
   let sel = selector.trim();
   if (!sel || sel.startsWith("@")) return sel;
-  sel = sel.replace(/\bbody\.is-flow\b/g, ".hetal-flow");
+  sel = sel.replace(/\bbody\.is-flow\b/g, SCOPE);
   sel = sel.replace(/\bhtml\b/g, "");
-  sel = sel.replace(/\bbody\b/g, ".hetal-flow");
-  sel = sel.replace(/^:root\b/, ".hetal-flow");
+  sel = sel.replace(/\bbody\b/g, SCOPE);
+  sel = sel.replace(/^:root\b/, SCOPE);
   sel = sel.replace(/\s+/g, " ").replace(/\s+,/g, ",").replace(/,\s+/g, ",").trim();
   sel = sel.replace(/^,|,$/g, "").trim();
   if (!sel) return "";
-  if (sel === ".hetal-flow" || sel.startsWith(".hetal-flow ") || sel.startsWith(".hetal-flow.") || sel.startsWith(".hetal-flow:") || sel.startsWith(".hetal-flow[")) {
+  if (sel === SCOPE || sel.startsWith(SCOPE + " ") || sel.startsWith(SCOPE + ".") || sel.startsWith(SCOPE + ":") || sel.startsWith(SCOPE + "[")) {
     return sel;
   }
-  return ".hetal-flow " + sel;
+  return SCOPE + " " + sel;
 }
 
 function scopeBlock(css) {
@@ -71,19 +80,24 @@ function scopeBlock(css) {
 }
 
 function scopeCss(css) {
-  const renamed = css.replace(/shelf-scan/g, "hetal-shelf-scan");
+  const renamed = css.replace(/shelf-scan/g, "lpc-shelf-scan");
   return scopeBlock(renamed);
 }
 
 function dataUri(file) {
   const buf = fs.readFileSync(file);
-  return "data:image/png;base64," + buf.toString("base64");
+  const mime = MIME[path.extname(file).toLowerCase()] || "application/octet-stream";
+  return "data:" + mime + ";base64," + buf.toString("base64");
 }
 
 function iconUri(file) {
-  const tmp = path.join(require("os").tmpdir(), "hetal-app-icon-96.png");
-  execFileSync("sips", ["-z", "96", "96", file, "--out", tmp], { stdio: "ignore" });
-  return dataUri(tmp);
+  const tmp = path.join(require("os").tmpdir(), "lpc-app-icon-96.png");
+  try {
+    execFileSync("sips", ["-z", "96", "96", file, "--out", tmp], { stdio: "ignore" });
+    return dataUri(tmp);
+  } catch {
+    return dataUri(file);
+  }
 }
 
 const brand = JSON.parse(fs.readFileSync(path.join(clientDir, "brand.json"), "utf8"));
@@ -108,13 +122,13 @@ if (/src="assets\//.test(fragment)) {
   process.exit(1);
 }
 
-const embed = '<div class="hetal-flow">' + fragment.trim() + "</div>\n";
+const embed = '<div class="lpc-flow">' + fragment.trim() + "</div>\n";
 const css = fs.readFileSync(path.join(root, "harness", "styles.css"), "utf8");
 const c = brand.colors;
 const head =
   "<style>\n" +
   scopeCss(css) +
-  "\n.hetal-flow{--bg:" +
+  "\n.lpc-flow{--bg:" +
   c.bg +
   ";--fg:" +
   c.fg +
@@ -124,7 +138,7 @@ const head =
   c.accentFg +
   ";--muted:" +
   c.muted +
-  "}\n.hetal-flow .btn,.hetal-flow button[type=\"submit\"]{background:var(--accent);color:var(--accent-fg)}\n</style>\n";
+  "}\n.lpc-flow .btn,.lpc-flow button[type=\"submit\"]{background:var(--accent);color:var(--accent-fg)}\n</style>\n";
 const clientJs = fs.readFileSync(path.join(root, "harness", "client.js"), "utf8");
 const attributionJs = fs.readFileSync(path.join(root, "harness", "attribution.js"), "utf8");
 const footer =
