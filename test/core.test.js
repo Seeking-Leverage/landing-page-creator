@@ -117,101 +117,43 @@ test("QA render does not keep the form endpoint or pixel ids", () => {
 
 test("scriptable SVG logos are refused", () => {
   assert.equal(svgIsUnsafe(Buffer.from('<svg onload="alert(1)"></svg>')), true);
+  assert.equal(svgIsUnsafe(Buffer.from("<svg/onload=alert(1)>")), true);
   assert.equal(svgIsUnsafe(Buffer.from("<svg><script>alert(1)</script></svg>")), true);
+  assert.equal(svgIsUnsafe(Buffer.from("<svg>&#x110000;</svg>")), true);
   assert.equal(svgIsUnsafe(Buffer.from("<svg><path d='M0 0'/></svg>")), false);
+});
+
+test("QA env drops the form endpoint and Appcast with the other pixels", () => {
+  const safe = qaSafeEnv({
+    CLIENT: "acme",
+    FORM_ENDPOINT: "https://crm.example/lead",
+    META_PIXEL_ID: "1570763517329516",
+    GOOGLE_ADS_ID: "AW-123456789",
+    TIKTOK_PIXEL_ID: "C9ABCDEFGHIJKLMNOP",
+    APPCAST_PIXEL_URL: "https://click.appcast.io/pixels/generic3-29483.js",
+  });
+  assert.equal(safe.CLIENT, "acme");
+  assert.equal(safe.FORM_ENDPOINT, "");
+  assert.equal(safe.META_PIXEL_ID, "");
+  assert.equal(safe.GOOGLE_ADS_ID, "");
+  assert.equal(safe.TIKTOK_PIXEL_ID, "");
+  assert.equal(safe.APPCAST_PIXEL_URL, "");
 });
 
 test("a lead fires once after a 2xx and not for an empty or honeypot submit", async () => {
   const script = fs.readFileSync(path.join(root, "harness/client.js"), "utf8");
-  const leads = [];
-  const posts = [];
-  function boot(cfg, { valid = true, honeypot = "" } = {}) {
-    leads.length = 0;
-    posts.length = 0;
-    const form = {
-      checkValidity() {
-        return valid;
-      },
-      reportValidity() {},
-    };
-    const status = { textContent: "" };
-    const document = {
-      body: {
-        classList: {
-          set: new Set(),
-          add(name) {
-            this.set.add(name);
-          },
-          contains(name) {
-            return this.set.has(name);
-          },
-        },
-      },
-      head: { appendChild() {} },
-      getElementById(id) {
-        if (id === "form-status") return status;
-        if (id === "lead-form") return form;
-        return null;
-      },
-      querySelectorAll() {
-        return [];
-      },
-      createElement() {
-        return {};
-      },
-      getElementsByTagName() {
-        return [{ parentNode: { insertBefore() {} } }];
-      },
-    };
-    const sandbox = {
-      window: {},
-      document,
-      URLSearchParams,
-      FormData: class {
-        forEach(cb) {
-          cb(honeypot, "website");
-          cb("ada@example.com", "email");
-        }
-      },
-      fetch: async (url, opts) => {
-        posts.push(url);
-        return { ok: true, status: 200 };
-      },
-      console,
-    };
-    sandbox.window.window = sandbox.window;
-    sandbox.window.document = document;
-    vm.createContext(sandbox);
-    sandbox.window.__HARNESS__ = cfg;
-    vm.runInContext(script, sandbox);
-    const realFbq = sandbox.window.fbq;
-    sandbox.window.fbq = function () {
-      if (arguments[0] === "track" && arguments[1] === "Lead") leads.push("meta");
-      return realFbq.apply(this, arguments);
-    };
-    const realGtag = sandbox.window.gtag;
-    sandbox.window.gtag = function () {
-      if (arguments[0] === "event" && arguments[1] === "conversion") leads.push("google");
-      return realGtag.apply(this, arguments);
-    };
-    sandbox.window.ttq.track = function (name) {
-      if (name === "Lead") leads.push("tiktok");
-    };
-    form.onsubmit = null;
-    const listeners = [];
-    const orig = form.addEventListener;
-    // client already attached during run. Re-read by wrapping before run would be better.
-    return { sandbox, form, status, listeners, orig };
-  }
 
-  // Re-run with listener capture by patching the prototype path: call the handler the script stored.
   function submit(cfg, opts) {
     const state = { handler: null };
+    const button = { disabled: false };
     const form = {
       checkValidity() {
         return opts.valid !== false;
       },
       reportValidity() {},
+      querySelector(sel) {
+        return sel === 'button[type="submit"]' ? button : null;
+      },
       addEventListener(_type, fn) {
         state.handler = fn;
       },
@@ -270,8 +212,10 @@ test("a lead fires once after a 2xx and not for an empty or honeypot submit", as
         leads.push("tiktok");
       };
     }
-    state.handler({ preventDefault() {}, target: form });
-    return { posts, leads, status };
+    const event = { preventDefault() {}, target: form };
+    state.handler(event);
+    if (opts.twice) state.handler(event);
+    return { posts, leads, status, button };
   }
 
   const cfg = {
@@ -284,9 +228,10 @@ test("a lead fires once after a 2xx and not for an empty or honeypot submit", as
       tiktok: "C9ABCDEFGHIJKLMNOP",
     },
   };
-  const ok = submit(cfg, { valid: true });
+  const ok = submit(cfg, { valid: true, twice: true });
   await new Promise((r) => setTimeout(r, 20));
   assert.deepEqual(ok.posts, ["https://crm.example/lead"]);
+  assert.equal(ok.button.disabled, true);
   assert.deepEqual(ok.leads.sort(), ["google", "meta", "tiktok"]);
 
   const empty = submit(cfg, { valid: false });

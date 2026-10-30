@@ -7,6 +7,12 @@ const TOTAL = [
 ];
 const EC_BLOCKS = [0, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16];
 const EC_WORDS = [0, 10, 16, 26, 36, 48, 64, 72, 88, 110, 130, 150, 176, 198, 216, 240, 280, 308, 338, 364, 416];
+// 18-bit version information for versions 7–20. Versions 1–6 have no version block.
+const VERSION_INFO = [
+  0, 0, 0, 0, 0, 0, 0,
+  0x07c94, 0x085bc, 0x09a99, 0x0a4d3, 0x0bbf6, 0x0c762, 0x0d847, 0x0e60d,
+  0x0f928, 0x10b78, 0x1145d, 0x12a17, 0x13532, 0x149a6,
+];
 
 const EXP = new Uint8Array(512);
 const LOG = new Uint8Array(256);
@@ -158,6 +164,16 @@ function encodeModules(text) {
   const formatBits = formatInfo(0);
   writeFormat(dark, reserved, size, formatBits);
   set(size - 8, 8, true);
+  if (version >= 7) {
+    const bits = VERSION_INFO[version];
+    for (let i = 0; i < 18; i++) {
+      const on = ((bits >>> i) & 1) === 1;
+      const a = size - 11 + (i % 3);
+      const b = Math.floor(i / 3);
+      set(b, a, on);
+      set(a, b, on);
+    }
+  }
 
   let row = size - 1;
   let col = size - 1;

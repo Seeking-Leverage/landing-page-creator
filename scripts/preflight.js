@@ -8,6 +8,7 @@ const { contrast } = require("../harness/contrast");
 const { validate } = require("../harness/schema");
 const { resolveAsset } = require("../harness/assets");
 const { pixelError, pixelConfig } = require("../harness/pixels");
+const { isEarningsCard } = require("../harness/earnings");
 
 const root = path.join(__dirname, "..");
 const env = loadEnv(root);
@@ -135,9 +136,7 @@ if (campaign.flow) {
   if (!Array.isArray(flow.matchLines) || flow.matchLines.length < 2) fail("flow.matchLines required");
   if (!Array.isArray(flow.pay) || !flow.pay.length) fail("flow.pay required");
   if (campaign.primaryAction.type !== "link") fail("a flow page needs primaryAction.type link");
-  const earnings = (item) =>
-    item && (/earnings potential/i.test(item.label || "") || /\$40/.test(item.value || ""));
-  const hasEarningsCard = flow.pay.some(earnings) || earnings(flow.earnings);
+  const hasEarningsCard = flow.pay.some(isEarningsCard) || isEarningsCard(flow.earnings);
   if (campaign.showEarningsPotential === true) {
     if (!campaign.earningsSource || !String(campaign.earningsSource).trim()) {
       fail("showEarningsPotential requires earningsSource (a link, doc, or date for the claim)");

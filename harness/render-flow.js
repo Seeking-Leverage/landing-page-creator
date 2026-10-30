@@ -1,6 +1,7 @@
 "use strict";
 
 const { escapeHtml, escapeAttr } = require("./escape");
+const { isEarningsCard } = require("./earnings");
 const { qrSvg } = require("./qr");
 
 const ICONS = [
@@ -72,10 +73,7 @@ function renderFlow(page) {
 
   const showEarnings = campaign.showEarningsPotential === true && campaign.earningsSource;
   const pay = (flow.pay || [])
-    .filter((item) => {
-      const earnings = /earnings potential/i.test(item.label || "") || /\$40/.test(item.value || "");
-      return showEarnings || !earnings;
-    })
+    .filter((item) => showEarnings || !isEarningsCard(item))
     .map((item) => {
       return `<article class="pay">
       <p class="pay-value">${escapeHtml(item.value)}</p>
